@@ -1,0 +1,17 @@
+{
+    "inputs": [
+        "A",
+        "B"
+    ],
+    "variables": {
+        "a": "int($A)",
+        "b": "int($B)"
+    },
+    "outputs": {
+        "AND": "$a * $b",
+        "OR": "$a + $b",
+        "NOR": "($a + $b) != 0",
+        "XOR": "($a + $b) % 2",
+        "XNOR": "($a + $b) % 2 == 0"
+    }
+}
