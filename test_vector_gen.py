@@ -4,24 +4,12 @@ import sys
 import json
 import argparse
 
+from console import Console
+
 DEBUG = False
 SAVE_FILE = "test_vectors.txt"
 
-COLOR_RED = "\u001b[31;1m"
-COLOR_BLUE = "\u001b[34;1m"
-COLOR_RESET = "\u001b[0m"
-
 binarize = lambda n: 0 if n <= 0 else 1
-
-def debug(*args, **kwargs):
-    if DEBUG:
-        print("[>>] ", *args, **kwargs)
-
-def error(*args, **kwargs):
-    print(COLOR_RED, "[!!!] Error:", COLOR_RESET, *args, **kwargs)
-
-def info(*args, **kwargs):
-    print(COLOR_BLUE, "[[i]]", COLOR_RESET, *args, **kwargs)
 
 class Bit(object):
     def __init__(self, value=0, call_code=None):
@@ -71,24 +59,26 @@ if __name__ == "__main__":
     if args.verbose:
         DEBUG = True
 
-    info("Sazak's CENG232 Logisim TestBench / Test Vector Generator")
-    info(testgen_parser.epilog, "\n")
+    terminal= Console(debug=DEBUG)
+
+    terminal.info("Sazak's CENG232 Logisim TestBench / Test Vector Generator")
+    terminal.info(testgen_parser.epilog, "\n")
 
     if not os.access(args.config_file, os.R_OK):
-        error(f"Config file '{args.config_file}' is not reachable.")
+        terminal.error(f"Config file '{args.config_file}' is not reachable.")
         sys.exit(1)
 
     with open(args.config_file, "r") as fp:
         test_config = json.load(fp)
 
-    info("Generating symbol table for test configuration description...")
+    terminal.info("Generating symbol table for test configuration description...")
 
     symtab = dict()
 
     for sym in test_config["inputs"]:
         symtab[sym] = Bit()
 
-        debug(f"Input({sym})")
+        terminal.debug(f"Input({sym})")
 
     for sym in test_config["variables"]:
         eval_code = test_config["variables"][sym]
@@ -103,7 +93,7 @@ if __name__ == "__main__":
 
         symtab[sym] = LazyVariable(sym, eval_code)
 
-        debug(f"Var({sym}): {eval_code}")
+        terminal.debug(f"Var({sym}): {eval_code}")
 
     for sym in test_config["outputs"]:
         eval_code = test_config["outputs"][sym]
@@ -119,16 +109,16 @@ if __name__ == "__main__":
         eval_code = "binarize(int(" + eval_code + "))"
         symtab[sym] = Bit(call_code=eval_code)
 
-        debug(f"Output({sym}): {eval_code}")
+        terminal.debug(f"Output({sym}): {eval_code}")
 
-    info("Generating truth table...")
+    terminal.info("Generating truth table...")
 
     test_vector_lines = list()
 
     test_vector_lines.append(" ".join(test_config["inputs"] + list(test_config["outputs"].keys())))
     test_vector_lines[0] += "\n"
 
-    debug("Generating truth table for bits:", test_vector_lines)
+    terminal.debug("Generating truth table for bits:", test_vector_lines)
 
     num_inputs = len(test_config["inputs"])
 
@@ -141,9 +131,9 @@ if __name__ == "__main__":
 
         test_vector_lines.append(" ".join(line) + "\n")
 
-    info("Saving test vectors to:", args.output)
+    terminal.info("Saving test vectors to:", args.output)
 
     with open(args.output, "w") as fp:
         fp.writelines(test_vector_lines)
 
-    info("Done. Goodbye :)")
+    terminal.info("Done. Goodbye :)")

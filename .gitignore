@@ -1,2 +1,4 @@
 .DS_Store
 test_vectors.txt
+
+__pycache__/
