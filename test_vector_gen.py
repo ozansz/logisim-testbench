@@ -56,7 +56,7 @@ class LazyVariable(object):
 
 testgen_parser = argparse.ArgumentParser(
     description="Logisim test vector generator script for Sazak's CENG232 TestBench",
-    epilog="Made with ❤️ by Ozan Sazak.\nHappy coding :)")
+    epilog="Made with ❤️ by Ozan Sazak. ### Happy coding :)")
 
 testgen_parser.add_argument("config_file", type=str,
     help="Path of test configuration file")
@@ -71,12 +71,17 @@ if __name__ == "__main__":
     if args.verbose:
         DEBUG = True
 
+    info("Sazak's CENG232 Logisim TestBench / Test Vector Generator")
+    info(testgen_parser.epilog, "\n")
+
     if not os.access(args.config_file, os.R_OK):
         error(f"Config file '{args.config_file}' is not reachable.")
         sys.exit(1)
 
     with open(args.config_file, "r") as fp:
         test_config = json.load(fp)
+
+    info("Generating symbol table for test configuration description...")
 
     symtab = dict()
 
@@ -116,6 +121,8 @@ if __name__ == "__main__":
 
         debug(f"Output({sym}): {eval_code}")
 
+    info("Generating truth table...")
+
     test_vector_lines = list()
 
     test_vector_lines.append(" ".join(test_config["inputs"] + list(test_config["outputs"].keys())))
@@ -134,7 +141,9 @@ if __name__ == "__main__":
 
         test_vector_lines.append(" ".join(line) + "\n")
 
-    debug("Saving test vectors to:", args.output)
+    info("Saving test vectors to:", args.output)
 
     with open(args.output, "w") as fp:
         fp.writelines(test_vector_lines)
+
+    info("Done. Goodbye :)")
