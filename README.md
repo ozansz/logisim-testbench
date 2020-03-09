@@ -12,6 +12,10 @@ The only dependencies are:
 * Python3
 * Bash
 
+An example GUI output for a successfull testing is as below,
+
+![](example-ss-2.png)
+
 ## Installation
 
 The project is already pre-configured to be run in just one command. The usage instructions are below.
