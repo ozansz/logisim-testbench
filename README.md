@@ -16,6 +16,15 @@ The only dependencies are:
 
 The project is already pre-configured to be run in just one command. The usage instructions are below.
 
+## GUI
+
+The last version of TestBench comes with a sweet UI. To use the testbench with graphical interface, just run the command below,
+
+```bash
+cd src/
+python3 ui.py
+```
+
 ## Usage
 
 ### Test Configuration
@@ -125,6 +134,7 @@ chmod +x runtest.sh
 For example, if you have `lab1.circ` and `lab1-config.json` files, then run the commands as below,
 
 ```bash
+cd src/
 chmod +x runtest.sh
 ./runtest.sh lab1.circ lab1-config.json
 ```
