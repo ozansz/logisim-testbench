@@ -10,20 +10,30 @@ DEBUG = False
 SAVE_FILE = "test_vectors.txt"
 
 binarize = lambda n: 0 if n <= 0 else 1
+positive = lambda n: -n if n < 0 else n
 
 class Bit(object):
-    def __init__(self, value=0, call_code=None):
+    def __init__(self, name, value=0, call_code=None):
+        self.name = name
         self.value = value
         self.__call_code = "self.value"
 
         if call_code is not None:
             self.__call_code = call_code
 
+    @property
+    def call_code(self):
+        return self.__call_code
+
     def update(self, value):
         self.value = value
 
     def __or__(self, other):
-        return int(str(self.value) + str(other.value), 2)
+        if type(other) == type(self):
+            terminal.debug("_OR_:", type(self), self.name, self.value, type(other), other.name, other.value)
+            return int(str(self.value) + str(other.value), 2)
+        else:
+            raise RuntimeError(f"Unsupported OR with: {type(other)}")
 
     def __ror__(self, other):
         return self.__or__(other)
@@ -32,7 +42,10 @@ class Bit(object):
         return self.value
 
     def __call__(self):
-        return eval(self.__call_code)
+        terminal.debug(f"EVAL ({self.name}):", self.__call_code)
+        ret = eval(self.__call_code)
+        terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
+        return ret
 
 class LazyVariable(object):
     def __init__(self, name, call_code):
@@ -40,7 +53,23 @@ class LazyVariable(object):
         self.__call_code = call_code
 
     def __call__(self):
-        return eval(self.__call_code)
+        terminal.debug(f"EVAL ({self.name}):", self.__call_code)
+        ret = eval(self.__call_code)
+        terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
+        return ret
+
+    @property
+    def call_code(self):
+        return self.__call_code
+
+def debug_symtab(symtab):
+    terminal.debug("====================[ DEBUG ]====================")
+    
+    for sym in symtab:
+        if isinstance(symtab[sym], Bit):
+            terminal.debug(f"{symtab[sym].name}: {symtab[sym].value}, {symtab[sym].call_code}")
+        if isinstance(symtab[sym], LazyVariable):
+            terminal.debug(f"{symtab[sym].name}: {symtab[sym].call_code}")
 
 testgen_parser = argparse.ArgumentParser(
     description="Logisim test vector generator script for Sazak's CENG232 TestBench",
@@ -76,7 +105,7 @@ if __name__ == "__main__":
     symtab = dict()
 
     for sym in test_config["inputs"]:
-        symtab[sym] = Bit()
+        symtab[sym] = Bit(sym)
 
         terminal.debug(f"Input({sym})")
 
@@ -107,7 +136,7 @@ if __name__ == "__main__":
             )
 
         eval_code = "binarize(int(" + eval_code + "))"
-        symtab[sym] = Bit(call_code=eval_code)
+        symtab[sym] = Bit(sym, call_code=eval_code)
 
         terminal.debug(f"Output({sym}): {eval_code}")
 
@@ -122,13 +151,28 @@ if __name__ == "__main__":
 
     num_inputs = len(test_config["inputs"])
 
-    for seq in [bin(i).replace("0b", "").zfill(num_inputs) for i in range(2**num_inputs)]:
+    for seq in [bin(i)[2:].zfill(num_inputs) for i in range(2**num_inputs)]:
         for i in range(num_inputs):
             symtab[test_config["inputs"][i]].update(int(seq[i]))
 
-        line = [str(symtab[sym]()) for sym in test_config["inputs"]]
-        line += [str(symtab[sym]()) for sym in test_config["outputs"]]
+        try:
+            terminal.debug(f"Eval i ({sym}):", symtab[sym].call_code)
+            line = [str(symtab[sym]()) for sym in test_config["inputs"]]
+        except Exception as e:
+            print("ERR (inputs):", e)
+            debug_symtab(symtab)
+            exit(1)
 
+        try:
+            terminal.debug(f"Eval o ({sym}):", symtab[sym].call_code)
+            line += [str(symtab[sym]()) for sym in test_config["outputs"]]
+        except Exception as e:
+            print("ERR (outputs):", e)
+            debug_symtab(symtab)
+            exit(1)
+
+        terminal.debug(line)
+        terminal.debug("\n\n")
         test_vector_lines.append(" ".join(line) + "\n")
 
     terminal.info("Saving test vectors to:", args.output)
