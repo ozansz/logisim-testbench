@@ -14,7 +14,7 @@ The only dependencies are:
 
 An example GUI output for a successfull testing is as below,
 
-![](example-ss-2.png)
+![](screenshots/example-ss-2.png)
 
 ## Installation
 
@@ -145,7 +145,7 @@ chmod +x runtest.sh
 
 An example terminal output for a successfull testing is as below,
 
-![](example-ss.png)
+![](screenshots/example-ss.png)
 
 ## Known issues
 
@@ -164,7 +164,7 @@ You can get in contact with me using my e-mail addresses,
 If you want to contribute to my project, there are a few features I would appreciate if someone else helps me to implement,
 
 * Custom description language and parser
-* Graphical interface for the whole tool
+* ~~Graphical interface for the whole tool~~
 * Better code documentation
 
 ----
