@@ -1,0 +1,28 @@
+{
+    "inputs": [
+        "O2",
+        "O1",
+        "O0",
+        "A1",
+        "A0",
+        "B1",
+        "B0"
+    ],
+    "variables": {
+        "a": "$A1 | $A0",
+        "b": "$B1 | $B0",
+        "op": "($O2.value << 2) + ($O1.value << 1) + ($O0.value << 0)",
+        "funcs": "(lambda a,b: a | b, lambda a,b: a & b, lambda a,b: ~(a | b), lambda a,b: a ^ b, lambda a,b: a - b, lambda a,b: a + b, lambda a,b: a == b, lambda *x: 0)"
+    },
+    "outputs": {
+        "S": "int($funcs[$op]($a, $b) < 0)",
+        "L7": "int(positive($funcs[$op]($a, $b)) == 7)",
+        "L6": "int(positive($funcs[$op]($a, $b)) == 6)",
+        "L5": "int(positive($funcs[$op]($a, $b)) == 5)",
+        "L4": "int(positive($funcs[$op]($a, $b)) == 4)",
+        "L3": "int(positive($funcs[$op]($a, $b)) == 3)",
+        "L2": "int(positive($funcs[$op]($a, $b)) == 2)",
+        "L1": "int(positive($funcs[$op]($a, $b)) == 1)",
+        "L0": "int(positive($funcs[$op]($a, $b)) == 0)"
+    }
+}
