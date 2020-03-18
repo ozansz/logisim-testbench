@@ -9,6 +9,34 @@ from console import Console
 DEBUG = False
 SAVE_FILE = "test_vectors.txt"
 
+ALL_CHPIS = [
+    'Base:Text',
+    'Base:Splitter',
+    'Base:Clock',
+    'Base:Pin',
+    'Base:Probe',
+    'CENG232 Gates:AND Gate',
+    'CENG232 Gates:OR Gate',
+    'CENG232 Gates:NOT Gate',
+    'CENG232 Gates:NOR Gate',
+    'CENG232 Gates:Constant',
+    'CENG232 Gates:Controlled Buffer',
+    'CENG232 Gates:Buffer',
+    'CENG232 Gates:Controlled Inverter',
+    'CENG232 Gates:XOR Gate',
+    'CENG232 Gates:NAND Gate',
+    'CENG232 Gates:XNOR Gate',
+    'CENG232 ICs:4-bit Latch (7475)',
+    'CENG232 ICs:4 bit full adder (7483)',
+    'CENG232 ICs:Dual J-K Flip Flop (74112)',
+    'CENG232 ICs:Dual D Flip Flop (7474)',
+    'CENG232 ICs:3-to-8 decoder (74138)',
+    'CENG232 ICs:4-to-1 MUX (x2) (74153)',
+    'CENG232 ICs:4-bit shift register (74195)',
+    'CENG232 ICs:2-to-4 Decoder (x2) (74155)',
+    'CENG232 ICs:4-bit shift register (7495)'
+]
+
 binarize = lambda n: 0 if n <= 0 else 1
 positive = lambda n: -n if n < 0 else n
 
@@ -71,6 +99,45 @@ def debug_symtab(symtab):
         if isinstance(symtab[sym], LazyVariable):
             terminal.debug(f"{symtab[sym].name}: {symtab[sym].call_code}")
 
+class SimulationProperties(object):
+    def __init__(self, inputs, outputs):
+        self.allowed_chips = []
+        self.inputs = inputs
+        self.outputs = outputs
+        self.runs = []
+
+    def allow_chip(self, chip):
+        if chip not in self.allowed_chips:
+            self.allowed_chips.append(chip)
+
+    def disallow_chip(self, chip):
+        if chip in self.allowed_chips:
+            self.allowed_chips.remove(chip)
+
+    def add_run(self, inputs, outputs):
+        self.runs.append((inputs, outputs))
+
+    def save_to(self, file_path):
+        with open(file_path, "w") as fp:
+            fp.write("allowed_chips= \\\n\tBase:Pin")
+
+            for chip in self.allowed_chips:
+                fp.write(f", \\\n\t{chip}")
+
+            fp.write(f"\n\ninputs={','.join(self.inputs)}")
+            fp.write(f"\noutputs={','.join(self.outputs)}\n")
+            fp.write(f"\nnumber_of_runs={len(self.runs)}\n")
+
+            for i in range(1, len(self.runs) + 1):
+                fp.write(f"\nrun.{i}.length = 1")
+
+            fp.write("\n")
+
+            for index, run in enumerate(self.runs):
+                fp.write(f"\nrun.{index + 1}.state.1 = {','.join(run[0])};{','.join(run[1])}")
+            
+            fp.write("\n")
+
 testgen_parser = argparse.ArgumentParser(
     description="Logisim test vector generator script for Sazak's CENG232 TestBench",
     epilog="Made with ❤️ by Ozan Sazak. ### Happy coding :)")
@@ -103,6 +170,24 @@ if __name__ == "__main__":
     terminal.info("Generating symbol table for test configuration description...")
 
     symtab = dict()
+    props = SimulationProperties(test_config["inputs"][:], list(test_config["outputs"].keys()))
+
+    if "$meta" in test_config:
+        if "allowed_chips" in test_config["$meta"]:
+            ac = test_config["$meta"]["allowed_chips"]
+
+            if type(ac) == list:
+                for chip in ac:
+                    props.allow_chip(chip)
+            elif ac == '__all__':
+                props.allowed_chips = ALL_CHPIS[:]
+            else:
+                print("!! Unsupported 'allowed_chips':", test_config["$meta"]["allowed_chips"])
+                exit(1)
+        else:
+            props.allowed_chips = ALL_CHPIS[:]
+    else:
+        props.allowed_chips = ALL_CHPIS[:]
 
     for sym in test_config["inputs"]:
         symtab[sym] = Bit(sym)
@@ -157,7 +242,8 @@ if __name__ == "__main__":
 
         try:
             terminal.debug(f"Eval i ({sym}):", symtab[sym].call_code)
-            line = [str(symtab[sym]()) for sym in test_config["inputs"]]
+            _inputs = [str(symtab[sym]()) for sym in test_config["inputs"]]
+            line = _inputs[:]
         except Exception as e:
             print("ERR (inputs):", e)
             debug_symtab(symtab)
@@ -165,17 +251,22 @@ if __name__ == "__main__":
 
         try:
             terminal.debug(f"Eval o ({sym}):", symtab[sym].call_code)
-            line += [str(symtab[sym]()) for sym in test_config["outputs"]]
+            _outputs = [str(symtab[sym]()) for sym in test_config["outputs"]]
+            line += _outputs
         except Exception as e:
             print("ERR (outputs):", e)
             debug_symtab(symtab)
             exit(1)
+
+        props.add_run(_inputs, _outputs)
 
         terminal.debug(line)
         terminal.debug("\n\n")
         test_vector_lines.append(" ".join(line) + "\n")
 
     terminal.info("Saving test vectors to:", args.output)
+
+    props.save_to(args.output + ".properties")
 
     with open(args.output, "w") as fp:
         fp.writelines(test_vector_lines)

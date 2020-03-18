@@ -36,6 +36,11 @@
       <height>361</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Courier</family>
+     </font>
+    </property>
    </widget>
    <widget class="QLabel" name="label_4">
     <property name="geometry">

@@ -1,4 +1,7 @@
 {
+    "$meta": {
+        "allowed_components": "__all__"
+    },
     "inputs": [
         "A",
         "B"

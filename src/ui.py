@@ -53,55 +53,50 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             return
 
-        p = subprocess.Popen(["python3", "convert_to_logisim_evolution.py",
-            self.circ_path_input.text()], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        process_out = p.communicate()
-
-        self.console_logs_tb.setText(process_out[0].decode())
-
-        if process_out[1] is not None:
-            if not os.access(self.circ_path_input.text() + '.conv.circ', os.R_OK):
-                error_dialog = QtWidgets.QErrorMessage()
-                error_dialog.showMessage('An error occured during test process: ' + process_out[1].decode())
-                error_dialog.exec_()
-
-                return
-
-        p = subprocess.Popen(["java", "-jar", "logisim-evolution.jar",
-            self.circ_path_input.text() + ".conv.circ", "-test", "main",
-            "_tt.txt"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(["java", "-jar", "logisim-ceng.jar", "-nosplash",
+            "-grader", "_tt.txt.properties", self.circ_path_input.text()],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         self.clear_logs()
 
         process_out = p.communicate()
-        process_stdout = process_out[0].decode()
 
-        if "-- AUTO-UPDATE ABORTED --\n" in process_stdout:
-            self.console_logs_tb.setText(process_stdout.partition("-- AUTO-UPDATE ABORTED --\n")[-1])
-        else:
-            self.console_logs_tb.setText(process_stdout)
-            
-        if process_out[1] is not None:
+        process_stdout = process_out[0].decode()
+        process_stderr = process_out[1].decode()
+
+        if process_stderr != "":
+            self.console_logs_tb.setText("=" * 10 + " ERROR LOG " + "=" * 10 + "\n\n Error:" + process_stderr)
             error_dialog = QtWidgets.QErrorMessage()
-            error_dialog.showMessage('An error occured during test process: ' + process_out[1].decode())
+            error_dialog.setWindowTitle("Unexpected tester error")
+            error_dialog.showMessage(process_stderr)
+
             error_dialog.exec_()
 
-        tester_pf = re.findall(r"Passed: (\d+), Failed: (\d)+\n", process_stdout)
+            return
 
-        if len(tester_pf) != 0:        
-            info_dialog = QtWidgets.QMessageBox()
-            info_dialog.setIcon(QtWidgets.QMessageBox.Information)
-            info_dialog.setText(f"Passed: {tester_pf[0][0]}\nFailed: {tester_pf[0][1]}")
-            info_dialog.setInformativeText("Detailed output can be found in console output section.")
-            info_dialog.setWindowTitle("Tester output")
-            info_dialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            info_dialog.exec_()
-        else:
-            self.console_logs_tb.setText(self.console_logs_tb.toPlainText() + process_out[1].decode())
+        self.console_logs_tb.setText(process_stdout)
+
+        tester_fails = len(re.findall("\[\!\!\] TEST RUN ERROR\\n", process_stdout))
+
+        with open("_tt.txt.properties", "r") as fp:
+            try:
+                tester_total = int(re.findall(r"number_of_runs=(\d+)", fp.read())[0])
+            except Exception as e:
+                error_dialog = QtWidgets.QErrorMessage()
+                error_dialog.showMessage('Exception: ' + str(e))
+                error_dialog.exec_()
+
+                return
+      
+        info_dialog = QtWidgets.QMessageBox()
+        info_dialog.setIcon(QtWidgets.QMessageBox.Information)
+        info_dialog.setText(f"Passed: {tester_total - tester_fails}\nFailed: {tester_fails}")
+        info_dialog.setInformativeText("Detailed output can be found in console output section.")
+        info_dialog.setWindowTitle("Tester output")
+        info_dialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        info_dialog.exec_()
 
         self.statusbar.showMessage("TestBench is ready.")
-        os.remove(self.circ_path_input.text() + '.conv.circ')
 
     def select_circ_file(self):
         options = QtWidgets.QFileDialog.Options()
