@@ -10,6 +10,7 @@ There is no need to install any software to use this tool if you are working in 
 
 The only dependencies are:
 * Python3
+* PyQt5
 * Bash
 
 An example GUI output for a successfull testing is as below,
@@ -18,15 +19,20 @@ An example GUI output for a successfull testing is as below,
 
 ## Installation
 
-The project is already pre-configured to be run in just one command. The usage instructions are below.
+The project requires only PyQt5 to be installed. To install it, just run the command below,
+
+```bash
+pip3 install -r requirements.txt
+```
+
+This will install **all** of the requirements to your local workspace.
 
 ## GUI
 
 The last version of TestBench comes with a sweet UI. To use the testbench with graphical interface, just run the command below,
 
 ```bash
-cd src/
-python3 ui.py
+python3 tester.py
 ```
 
 ## Usage
@@ -128,24 +134,9 @@ XNOR = !(A ^ B);
 
 ### The Test Runner
 
-When the configuration file is ready, the only thing to be done to test your circuit is to use the `runtest.sh` script. It will automatically generate truth tables and test your circuit through the test cases.
+~~When the configuration file is ready, the only thing to be done to test your circuit is to use the `runtest.sh` script. It will automatically generate truth tables and test your circuit through the test cases.~~
 
-```bash
-chmod +x runtest.sh
-./runtest.sh <circ-file> <config-file>
-```
-
-For example, if you have `lab1.circ` and `lab1-config.json` files, then run the commands as below,
-
-```bash
-cd src/
-chmod +x runtest.sh
-./runtest.sh lab1.circ lab1-config.json
-```
-
-An example terminal output for a successfull testing is as below,
-
-![](screenshots/example-ss.png)
+The test runner script is deprecated. Please use the gui (`tester.py`) instead.
 
 ## Known issues
 
