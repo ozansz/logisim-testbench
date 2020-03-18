@@ -5,7 +5,7 @@ import subprocess
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-qtcreator_file  = "mainwindow.ui"
+qtcreator_file  = "src/mainwindow.ui"
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtcreator_file)
 
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -53,7 +53,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             return
 
-        p = subprocess.Popen(["java", "-jar", "logisim-ceng.jar", "-nosplash",
+        p = subprocess.Popen(["java", "-jar", "src/logisim-ceng.jar", "-nosplash",
             "-grader", "_tt.txt.properties", self.circ_path_input.text()],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -122,7 +122,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def generate_truth_table(self, fileName):
         self.statusbar.showMessage("Generating truth table...")
 
-        p = subprocess.Popen(["python3", "test_vector_gen.py", fileName, "-o", "_tt.txt"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(["python3", "src/test_vector_gen.py", fileName, "-o", "_tt.txt"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.communicate()
 
         try:
