@@ -4,6 +4,12 @@ This project aims for creating an open-source Logisim circuit black-box testing 
 
 **Technology stack**: I used Python3 and Bash for scripts. Also JSON file type is used for circuit functionality definitions.
 
+## Contributors
+
+İlker Koşaroğlu [@ilkerkosaroglu](https://github.com/ilkerkosaroglu)
+
+Yiğitcan Uçan [@ucanyiit](https://github.com/ucanyiit)
+
 ## Dependencies
 
 There is no need to install any software to use this tool if you are working in a Linux-based platform. The Logisim Evolution version is already included in the project root.
