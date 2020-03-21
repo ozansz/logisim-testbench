@@ -4,7 +4,7 @@ import sys
 import json
 import argparse
 
-from console import Console
+from .console import Console
 
 DEBUG = False
 SAVE_FILE = "test_vectors.txt"
@@ -40,6 +40,8 @@ ALL_CHPIS = [
 binarize = lambda n: 0 if n <= 0 else 1
 positive = lambda n: -n if n < 0 else n
 
+debug_terminal = Console(debug=DEBUG)
+
 class Bit(object):
     def __init__(self, name, value=0, call_code=None):
         self.name = name
@@ -58,7 +60,7 @@ class Bit(object):
 
     def __or__(self, other):
         if type(other) == type(self):
-            terminal.debug("_OR_:", type(self), self.name, self.value, type(other), other.name, other.value)
+            debug_terminal.debug("_OR_:", type(self), self.name, self.value, type(other), other.name, other.value)
             return int(str(self.value) + str(other.value), 2)
         else:
             raise RuntimeError(f"Unsupported OR with: {type(other)}")
@@ -70,9 +72,9 @@ class Bit(object):
         return self.value
 
     def __call__(self):
-        terminal.debug(f"EVAL ({self.name}):", self.__call_code)
+        debug_terminal.debug(f"EVAL ({self.name}):", self.__call_code)
         ret = eval(self.__call_code)
-        terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
+        debug_terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
         return ret
 
 class LazyVariable(object):
@@ -81,9 +83,9 @@ class LazyVariable(object):
         self.__call_code = call_code
 
     def __call__(self):
-        terminal.debug(f"EVAL ({self.name}):", self.__call_code)
+        debug_terminal.debug(f"EVAL ({self.name}):", self.__call_code)
         ret = eval(self.__call_code)
-        terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
+        debug_terminal.debug(f"EVAL ({self.name}) OK. ({ret})")
         return ret
 
     @property
@@ -91,13 +93,13 @@ class LazyVariable(object):
         return self.__call_code
 
 def debug_symtab(symtab):
-    terminal.debug("====================[ DEBUG ]====================")
+    debug_terminal.debug("====================[ DEBUG ]====================")
     
     for sym in symtab:
         if isinstance(symtab[sym], Bit):
-            terminal.debug(f"{symtab[sym].name}: {symtab[sym].value}, {symtab[sym].call_code}")
+            debug_terminal.debug(f"{symtab[sym].name}: {symtab[sym].value}, {symtab[sym].call_code}")
         if isinstance(symtab[sym], LazyVariable):
-            terminal.debug(f"{symtab[sym].name}: {symtab[sym].call_code}")
+            debug_terminal.debug(f"{symtab[sym].name}: {symtab[sym].call_code}")
 
 class SimulationProperties(object):
     def __init__(self, inputs, outputs):
@@ -138,38 +140,27 @@ class SimulationProperties(object):
             
             fp.write("\n")
 
-testgen_parser = argparse.ArgumentParser(
-    description="Logisim test vector generator script for Sazak's CENG232 TestBench",
-    epilog="Made with ❤️ by Ozan Sazak. ### Happy coding :)")
+symtab = dict()
 
-testgen_parser.add_argument("config_file", type=str,
-    help="Path of test configuration file")
-testgen_parser.add_argument("-o", "--output", default=SAVE_FILE,
-    type=str, help="Save the test vector to a custom path")
-testgen_parser.add_argument("-v", "--verbose", action="store_true",
-    help="Show debug messages (Increase verbosity)")
-
-if __name__ == "__main__":
-    args = testgen_parser.parse_args()
-
-    if args.verbose:
-        DEBUG = True
-
-    terminal= Console(debug=DEBUG)
+def generate_test_vector(config_file, output_file=SAVE_FILE, verbose=False):
+    global symtab
+    
+    terminal = Console(debug=verbose)
 
     terminal.info("Sazak's CENG232 Logisim TestBench / Test Vector Generator")
-    terminal.info(testgen_parser.epilog, "\n")
+    terminal.info("Made with ❤️ by Ozan Sazak. ### Happy coding :)\n")
 
-    if not os.access(args.config_file, os.R_OK):
-        terminal.error(f"Config file '{args.config_file}' is not reachable.")
+    if not os.access(config_file, os.R_OK):
+        terminal.error(f"Config file '{config_file}' is not reachable.")
         sys.exit(1)
 
-    with open(args.config_file, "r") as fp:
+    with open(config_file, "r") as fp:
         test_config = json.load(fp)
 
     terminal.info("Generating symbol table for test configuration description...")
 
     symtab = dict()
+
     props = SimulationProperties(test_config["inputs"][:], list(test_config["outputs"].keys()))
 
     if "$meta" in test_config:
@@ -264,11 +255,11 @@ if __name__ == "__main__":
         terminal.debug("\n\n")
         test_vector_lines.append(" ".join(line) + "\n")
 
-    terminal.info("Saving test vectors to:", args.output)
+    terminal.info("Saving test vectors to:", output_file)
 
-    props.save_to(args.output + ".properties")
+    props.save_to(output_file + ".properties")
 
-    with open(args.output, "w") as fp:
+    with open(output_file, "w") as fp:
         fp.writelines(test_vector_lines)
 
     terminal.info("Done. Goodbye :)")
