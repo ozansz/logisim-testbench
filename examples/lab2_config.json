@@ -12,7 +12,7 @@
         "a": "$A1 | $A0",
         "b": "$B1 | $B0",
         "op": "($O2.value << 2) + ($O1.value << 1) + ($O0.value << 0)",
-        "funcs": "(lambda a,b: a | b, lambda a,b: a & b, lambda a,b: ~(a | b), lambda a,b: a ^ b, lambda a,b: a - b, lambda a,b: a + b, lambda a,b: a == b, lambda *x: 0)"
+        "funcs": "(lambda a,b: a | b, lambda a,b: a & b, lambda a,b: (a | b)^3, lambda a,b: a ^ b, lambda a,b: a - b, lambda a,b: a + b, lambda a,b: a == b, lambda *x: 0)"
     },
     "outputs": {
         "S": "int($funcs[$op]($a, $b) < 0)",
