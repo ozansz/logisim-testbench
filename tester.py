@@ -5,6 +5,8 @@ import subprocess
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
+from src.test_vector_gen import generate_test_vector
+
 qtcreator_file  = "src/mainwindow.ui"
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtcreator_file)
 
@@ -53,16 +55,14 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             return
 
-        p = subprocess.Popen(["java", "-jar", "src/logisim-ceng.jar", "-nosplash",
-            "-grader", "_tt.txt.properties", self.circ_path_input.text()],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            f"java -jar src/logisim-ceng.jar -nosplash -grader _tt.txt.properties {self.circ_path_input.text()}",
+            shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         self.clear_logs()
 
-        process_out = p.communicate()
-
-        process_stdout = process_out[0].decode()
-        process_stderr = process_out[1].decode()
+        process_stdout = p.stdout.read().decode()
+        process_stderr = p.stderr.read().decode()
 
         if process_stderr != "":
             self.console_logs_tb.setText("=" * 10 + " ERROR LOG " + "=" * 10 + "\n\n Error:" + process_stderr)
@@ -122,8 +122,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def generate_truth_table(self, fileName):
         self.statusbar.showMessage("Generating truth table...")
 
-        p = subprocess.Popen(["python3", "src/test_vector_gen.py", fileName, "-o", "_tt.txt"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        p.communicate()
+        generate_test_vector(fileName, output_file="_tt.txt")
 
         try:
             with open("_tt.txt", "r") as fp:
